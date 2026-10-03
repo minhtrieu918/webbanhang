@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { margin: 0; padding: 28px; background: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .window { width: 1500px; margin: 0 auto; overflow: hidden; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; box-shadow: 0 8px 24px rgba(15, 23, 42, .12); }
+    .title { padding: 16px 22px; color: #fff; background: #1f2937; font-size: 24px; font-weight: 700; }
+    pre { margin: 0; padding: 22px; color: #111827; background: #fff; font: 17px/1.55 Menlo, Monaco, Consolas, monospace; white-space: pre-wrap; }
+  </style>
+</head>
+<body><div class="window"><div class="title">cart.php - Hiển thị và cập nhật giỏ hàng</div><pre>&lt;?php $pageTitle = 'Giỏ hàng'; require __DIR__ . '/../shares/header.php'; ?&gt;
+&lt;div class="d-flex justify-content-between align-items-center mb-4"&gt;
+    &lt;h1 class="h2 mb-0"&gt;Giỏ hàng&lt;/h1&gt;
+    &lt;a href="&lt;?= e(url('Product')) ?&gt;" class="btn btn-outline-secondary"&gt;Tiếp tục mua sắm&lt;/a&gt;
+&lt;/div&gt;
+
+&lt;?php if ($items === []): ?&gt;
+    &lt;div class="alert alert-info"&gt;Giỏ hàng đang trống.&lt;/div&gt;
+&lt;?php else: ?&gt;
+    &lt;?php $total = array_sum(array_map(fn ($item) =&gt; $item-&gt;subtotal, $items)); ?&gt;
+    &lt;form method="post" action="&lt;?= e(url('Product/updateCart')) ?&gt;"&gt;
+        &lt;?= csrf_field() ?&gt;
+        &lt;div class="card border-0 shadow-sm overflow-hidden"&gt;
+            &lt;div class="table-responsive"&gt;
+                &lt;table class="table align-middle mb-0"&gt;
+                    &lt;thead class="table-light"&gt;&lt;tr&gt;&lt;th&gt;Sản phẩm&lt;/th&gt;&lt;th class="text-end"&gt;Đơn giá&lt;/th&gt;&lt;th style="width:130px"&gt;Số lượng&lt;/th&gt;&lt;th class="text-end"&gt;Thành tiền&lt;/th&gt;&lt;th&gt;&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+                    &lt;tbody&gt;
+                    &lt;?php foreach ($items as $item): ?&gt;
+                        &lt;tr&gt;
+                            &lt;td&gt;&lt;div class="d-flex align-items-center gap-3"&gt;
+                                &lt;?php if ($item-&gt;image): ?&gt;&lt;img class="cart-image" src="&lt;?= e(asset($item-&gt;image)) ?&gt;" alt=""&gt;&lt;?php else: ?&gt;&lt;div class="cart-image"&gt;&lt;/div&gt;&lt;?php endif; ?&gt;
+                                &lt;div&gt;&lt;a class="fw-semibold text-decoration-none text-dark" href="&lt;?= e(url('Product/show/' . $item-&gt;id)) ?&gt;"&gt;&lt;?= e($item-&gt;name) ?&gt;&lt;/a&gt;&lt;div class="small text-secondary"&gt;&lt;?= e($item-&gt;category_name ?? '') ?&gt;&lt;/div&gt;&lt;/div&gt;
+                            &lt;/div&gt;&lt;/td&gt;
+                            &lt;td class="text-end"&gt;&lt;?= number_format((float) $item-&gt;price, 0, ',', '.') ?&gt; VND&lt;/td&gt;
+                            &lt;td&gt;&lt;input class="form-control" type="number" name="quantity[&lt;?= (int) $item-&gt;id ?&gt;]" min="0" max="99" value="&lt;?= (int) $item-&gt;quantity ?&gt;"&gt;&lt;/td&gt;
+                            &lt;td class="text-end fw-semibold"&gt;&lt;?= number_format((float) $item-&gt;subtotal, 0, ',', '.') ?&gt; VND&lt;/td&gt;
+                            &lt;td class="text-end"&gt;
+                                &lt;button form="remove-&lt;?= (int) $item-&gt;id ?&gt;" class="btn btn-sm btn-outline-danger"&gt;Xóa&lt;/button&gt;
+                            &lt;/td&gt;
+                        &lt;/tr&gt;
+                    &lt;?php endforeach; ?&gt;
+                    &lt;/tbody&gt;
+                    &lt;tfoot&gt;&lt;tr&gt;&lt;th colspan="3" class="text-end"&gt;Tổng cộng&lt;/th&gt;&lt;th class="text-end text-danger fs-5"&gt;&lt;?= number_format((float) $total, 0, ',', '.') ?&gt; VND&lt;/th&gt;&lt;th&gt;&lt;/th&gt;&lt;/tr&gt;&lt;/tfoot&gt;
+                &lt;/table&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class="d-flex justify-content-end gap-2 mt-3"&gt;&lt;button class="btn btn-outline-primary"&gt;Cập nhật giỏ hàng&lt;/button&gt;&lt;a class="btn btn-success" href="&lt;?= e(url('Product/checkout')) ?&gt;"&gt;Tiến hành đặt hàng&lt;/a&gt;&lt;/div&gt;
+    &lt;/form&gt;
+    &lt;?php foreach ($items as $item): ?&gt;
+        &lt;form id="remove-&lt;?= (int) $item-&gt;id ?&gt;" method="post" action="&lt;?= e(url('Product/removeFromCart/' . $item-&gt;id)) ?&gt;"&gt;&lt;?= csrf_field() ?&gt;&lt;/form&gt;
+    &lt;?php endforeach; ?&gt;
+&lt;?php endif; ?&gt;
+&lt;?php require __DIR__ . '/../shares/footer.php'; ?&gt;
+
+</pre></div></body>
+</html>

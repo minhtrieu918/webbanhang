@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { margin: 0; padding: 28px; background: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .window { width: 1500px; margin: 0 auto; overflow: hidden; border: 1px solid #cbd5e1; border-radius: 10px; background: #ffffff; box-shadow: 0 8px 24px rgba(15, 23, 42, .12); }
+    .title { padding: 16px 22px; color: #ffffff; background: #1f2937; font-size: 24px; font-weight: 700; }
+    pre { margin: 0; padding: 22px; color: #111827; background: #ffffff; font: 17px/1.55 Menlo, Monaco, Consolas, monospace; white-space: pre-wrap; }
+  </style>
+</head>
+<body><div class="window"><div class="title">index.php - Router điều hướng</div><pre>&lt;?php
+declare(strict_types=1);
+
+session_start();
+
+require_once __DIR__ . '/app/helpers.php';
+
+$scriptDirectory = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+$scriptDirectory = $scriptDirectory === '/' ? '' : rtrim($scriptDirectory, '/');
+define('APP_BASE_URL', $scriptDirectory);
+
+$route = $_GET['url'] ?? null;
+if ($route === null) {
+    $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+    if ($scriptDirectory !== '' &amp;&amp; str_starts_with($path, $scriptDirectory)) {
+        $path = substr($path, strlen($scriptDirectory));
+    }
+    $route = trim($path, '/');
+}
+
+$segments = array_values(array_filter(explode('/', trim((string) $route, '/')), 'strlen'));
+$controllerSegment = $segments[0] ?? 'Product';
+$action = $segments[1] ?? 'index';
+$parameters = array_map(
+    static fn (string $value): int|string =&gt; ctype_digit($value) ? (int) $value : $value,
+    array_slice($segments, 2)
+);
+
+if (!preg_match('/^[A-Za-z][A-Za-z0-9_]*$/', $controllerSegment)
+    || !preg_match('/^[A-Za-z][A-Za-z0-9_]*$/', $action)) {
+    http_response_code(404);
+    exit('Đường dẫn không hợp lệ.');
+}
+
+$controllerName = ucfirst($controllerSegment) . 'Controller';
+$controllerFile = __DIR__ . '/app/controllers/' . $controllerName . '.php';
+
+if (!is_file($controllerFile)) {
+    http_response_code(404);
+    exit('Không tìm thấy controller.');
+}
+
+require_once $controllerFile;
+$controller = new $controllerName();
+
+if (!is_callable([$controller, $action])) {
+    http_response_code(404);
+    exit('Không tìm thấy chức năng.');
+}
+
+try {
+    call_user_func_array([$controller, $action], $parameters);
+} catch (ArgumentCountError | TypeError $exception) {
+    http_response_code(404);
+    exit('Tham số đường dẫn không hợp lệ.');
+}
+</pre></div></body>
+</html>

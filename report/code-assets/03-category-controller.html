@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { margin: 0; padding: 28px; background: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .window { width: 1500px; margin: 0 auto; overflow: hidden; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; box-shadow: 0 8px 24px rgba(15, 23, 42, .12); }
+    .title { padding: 16px 22px; color: #fff; background: #1f2937; font-size: 24px; font-weight: 700; }
+    pre { margin: 0; padding: 22px; color: #111827; background: #fff; font: 17px/1.55 Menlo, Monaco, Consolas, monospace; white-space: pre-wrap; }
+  </style>
+</head>
+<body><div class="window"><div class="title">CategoryController.php - Quản lý danh mục</div><pre>&lt;?php
+declare(strict_types=1);
+
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../models/CategoryModel.php';
+
+class CategoryController
+{
+    private CategoryModel $categoryModel;
+
+    public function __construct()
+    {
+        $db = (new Database())-&gt;getConnection();
+        $this-&gt;categoryModel = new CategoryModel($db);
+    }
+
+    public function index(): void
+    {
+        $categories = $this-&gt;categoryModel-&gt;getCategories();
+        require __DIR__ . '/../views/category/list.php';
+    }
+
+    public function list(): void
+    {
+        $this-&gt;index();
+    }
+
+    public function add(): void
+    {
+        $errors = [];
+        $old = [];
+        require __DIR__ . '/../views/category/add.php';
+    }
+
+    public function save(): void
+    {
+        require_post();
+        verify_csrf();
+        $old = $this-&gt;input();
+        $result = $this-&gt;categoryModel-&gt;addCategory($old['name'], $old['description']);
+        if (is_array($result)) {
+            $errors = $result;
+            require __DIR__ . '/../views/category/add.php';
+            return;
+        }
+        flash('success', 'Đã thêm danh mục.');
+        redirect('Category');
+    }
+
+    public function edit(int $id): void
+    {
+        $category = $this-&gt;findCategory($id);
+        $errors = [];
+        require __DIR__ . '/../views/category/edit.php';
+    }
+
+    public function update(): void
+    {
+        require_post();
+        verify_csrf();
+        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+        if (!$id) {
+            http_response_code(400);
+            exit('Mã danh mục không hợp lệ.');
+        }
+        $category = $this-&gt;findCategory($id);
+        $data = $this-&gt;input();
+        $result = $this-&gt;categoryModel-&gt;updateCategory($id, $data['name'], $data['description']);
+        if (is_array($result)) {
+            $errors = $result;
+            $category-&gt;name = $data['name'];
+            $category-&gt;description = $data['description'];
+            require __DIR__ . '/../views/category/edit.php';
+            return;
+        }
+        flash('success', 'Đã cập nhật danh mục.');
+        redirect('Category');
+    }
+
+    public function delete(int $id): never
+    {
+        require_post();
+        verify_csrf();
+        $this-&gt;findCategory($id);
+        try {
+            $this-&gt;categoryModel-&gt;deleteCategory($id);
+            flash('success', 'Đã xóa danh mục.');
+        } catch (PDOException $exception) {
+            flash('danger', 'Không thể xóa danh mục đang có sản phẩm.');
+        }
+        redirect('Category');
+    }
+
+    private function findCategory(int $id): object
+    {
+        $category = $this-&gt;categoryModel-&gt;getCategoryById($id);
+        if (!$category) {
+            http_response_code(404);
+            exit('Không tìm thấy danh mục.');
+        }
+        return $category;
+    }
+
+    private function input(): array
+    {
+        return [
+            'name' =&gt; trim((string) ($_POST['name'] ?? '')),
+            'description' =&gt; trim((string) ($_POST['description'] ?? '')),
+        ];
+    }
+}
+
+</pre></div></body>
+</html>

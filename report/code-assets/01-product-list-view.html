@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { margin: 0; padding: 28px; background: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .window { width: 1500px; margin: 0 auto; overflow: hidden; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; box-shadow: 0 8px 24px rgba(15, 23, 42, .12); }
+    .title { padding: 16px 22px; color: #fff; background: #1f2937; font-size: 24px; font-weight: 700; }
+    pre { margin: 0; padding: 22px; color: #111827; background: #fff; font: 17px/1.55 Menlo, Monaco, Consolas, monospace; white-space: pre-wrap; }
+  </style>
+</head>
+<body><div class="window"><div class="title">list.php - Hiển thị danh sách sản phẩm</div><pre>&lt;?php $pageTitle = 'Danh sách sản phẩm'; require __DIR__ . '/../shares/header.php'; ?&gt;
+
+&lt;div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4"&gt;
+    &lt;div&gt;
+        &lt;h1 class="h2 mb-1"&gt;Danh sách sản phẩm&lt;/h1&gt;
+        &lt;p class="text-secondary mb-0"&gt;Quản lý và chọn sản phẩm cho đơn hàng.&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;a href="&lt;?= e(url('Product/add')) ?&gt;" class="btn btn-primary"&gt;Thêm sản phẩm&lt;/a&gt;
+&lt;/div&gt;
+
+&lt;?php if ($products === []): ?&gt;
+    &lt;div class="alert alert-info"&gt;Chưa có sản phẩm. Hãy thêm sản phẩm đầu tiên.&lt;/div&gt;
+&lt;?php else: ?&gt;
+    &lt;div class="row g-4"&gt;
+        &lt;?php foreach ($products as $product): ?&gt;
+            &lt;div class="col-sm-6 col-lg-4"&gt;
+                &lt;article class="card product-card h-100 border-0 shadow-sm overflow-hidden"&gt;
+                    &lt;?php if ($product-&gt;image): ?&gt;
+                        &lt;img class="product-image" src="&lt;?= e(asset($product-&gt;image)) ?&gt;" alt="&lt;?= e($product-&gt;name) ?&gt;"&gt;
+                    &lt;?php else: ?&gt;
+                        &lt;div class="product-placeholder"&gt;Chưa có hình ảnh&lt;/div&gt;
+                    &lt;?php endif; ?&gt;
+                    &lt;div class="card-body d-flex flex-column"&gt;
+                        &lt;span class="badge text-bg-light align-self-start mb-2"&gt;&lt;?= e($product-&gt;category_name ?? 'Chưa phân loại') ?&gt;&lt;/span&gt;
+                        &lt;h2 class="h5"&gt;&lt;a class="text-decoration-none text-dark" href="&lt;?= e(url('Product/show/' . $product-&gt;id)) ?&gt;"&gt;&lt;?= e($product-&gt;name) ?&gt;&lt;/a&gt;&lt;/h2&gt;
+                        &lt;p class="text-secondary flex-grow-1"&gt;&lt;?= e($product-&gt;description) ?&gt;&lt;/p&gt;
+                        &lt;p class="fs-5 fw-bold text-danger mb-3"&gt;&lt;?= number_format((float) $product-&gt;price, 0, ',', '.') ?&gt; VND&lt;/p&gt;
+                        &lt;div class="d-flex flex-wrap gap-2"&gt;
+                            &lt;form method="post" action="&lt;?= e(url('Product/addToCart/' . $product-&gt;id)) ?&gt;"&gt;
+                                &lt;?= csrf_field() ?&gt;
+                                &lt;button class="btn btn-success btn-sm"&gt;Thêm vào giỏ&lt;/button&gt;
+                            &lt;/form&gt;
+                            &lt;a href="&lt;?= e(url('Product/edit/' . $product-&gt;id)) ?&gt;" class="btn btn-outline-warning btn-sm"&gt;Sửa&lt;/a&gt;
+                            &lt;form method="post" action="&lt;?= e(url('Product/delete/' . $product-&gt;id)) ?&gt;" onsubmit="return confirm('Xóa sản phẩm này?')"&gt;
+                                &lt;?= csrf_field() ?&gt;
+                                &lt;button class="btn btn-outline-danger btn-sm"&gt;Xóa&lt;/button&gt;
+                            &lt;/form&gt;
+                        &lt;/div&gt;
+                    &lt;/div&gt;
+                &lt;/article&gt;
+            &lt;/div&gt;
+        &lt;?php endforeach; ?&gt;
+    &lt;/div&gt;
+&lt;?php endif; ?&gt;
+
+&lt;?php require __DIR__ . '/../shares/footer.php'; ?&gt;
+
+</pre></div></body>
+</html>
